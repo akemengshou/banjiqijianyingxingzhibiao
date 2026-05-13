@@ -381,8 +381,8 @@
 
                 const dppmColors = dppmValues.map(v => v > dppmTargetVal ? '#ff4444' : '#667eea');
                 const dppmBgColors = dppmValues.map(v => v > dppmTargetVal ? 'rgba(255,68,68,0.3)' : 'rgba(102,126,234,0.1)');
-                const dppmRadii = dppmValues.map(v => v > dppmTargetVal ? 8 : 4);
-                const dppmWarnLabels = dppmValues.map((v, i) => v > dppmTargetVal ? '⚠️' : '');
+                const dppmRadii = dppmValues.map(v => v > dppmTargetVal ? 10 : 4);
+                const dppmStyles = dppmValues.map(v => v > dppmTargetVal ? 'triangle' : 'circle');
 
                 chartInstances[dppmId] = new Chart(document.getElementById(dppmId).getContext('2d'), {
                     type: 'line',
@@ -392,7 +392,8 @@
                             label: 'DPPM', data: dppmValues, borderColor: '#667eea',
                             backgroundColor: 'rgba(102,126,234,0.1)', borderWidth: 3, fill: true, tension: 0.4,
                             pointBackgroundColor: dppmColors, pointBorderColor: dppmColors,
-                            pointRadius: dppmRadii, pointHoverRadius: dppmRadii.map(r => r + 2)
+                            pointRadius: dppmRadii, pointHoverRadius: dppmRadii.map(r => r + 3),
+                            pointStyle: dppmStyles
                         }, {
                             label: 'DPPM目标(' + dppmTargetVal + ')', data: months.map(() => dppmTargetVal), borderColor: '#ff6b6b',
                             borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0
@@ -416,7 +417,8 @@
                 });
 
                 const larColors = larValues.map(v => v < larTargetVal ? '#ff4444' : '#4caf50');
-                const larRadii = larValues.map(v => v < larTargetVal ? 8 : 4);
+                const larRadii = larValues.map(v => v < larTargetVal ? 10 : 4);
+                const larStyles = larValues.map(v => v < larTargetVal ? 'triangle' : 'circle');
 
                 chartInstances[larId] = new Chart(document.getElementById(larId).getContext('2d'), {
                     type: 'line',
@@ -426,7 +428,8 @@
                             label: 'IQC LAR', data: larValues, borderColor: '#4caf50',
                             backgroundColor: 'rgba(76,175,80,0.1)', borderWidth: 3, fill: true, tension: 0.4,
                             pointBackgroundColor: larColors, pointBorderColor: larColors,
-                            pointRadius: larRadii, pointHoverRadius: larRadii.map(r => r + 2)
+                            pointRadius: larRadii, pointHoverRadius: larRadii.map(r => r + 3),
+                            pointStyle: larStyles
                         }, {
                             label: 'LAR目标(' + target.lar + ')', data: months.map(() => larTargetVal), borderColor: '#ff6b6b',
                             borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0

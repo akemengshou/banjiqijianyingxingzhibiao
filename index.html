@@ -121,6 +121,7 @@
                             <option value="ipx8">IPX8 Type-c（连接器）</option>
                             <option value="typec">Type-c（连接器）</option>
                             <option value="btb">BTB连接器</option>
+                            <option value="lds">LDS天线</option>
                         </select>
                     </div>
                 </div>
@@ -241,7 +242,7 @@
             }
 
             if (supplierFilter !== 'all') {
-                const supplierMap = {'pcb':'PCB','fpc':'FPC','ipx8':'IPX8 Type-c（连接器）','typec':'Type-c（连接器）','btb':'BTB连接器'};
+                const supplierMap = {'pcb':'PCB','fpc':'FPC','lds':'LDS天线','ipx8':'IPX8 Type-c（连接器）','typec':'Type-c（连接器）','btb':'BTB连接器'};
                 filteredData = filteredData.filter(row => row.supplier === supplierMap[supplierFilter]);
             }
 
@@ -323,7 +324,8 @@
             const allMonths = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
             const monthMap = {'1':'1月','2':'2月','3':'3月','4':'4月','5':'5月','6':'6月','7':'7月','8':'8月','9':'9月','10':'10月','11':'11月','12':'12月'};
 
-            const suppliers = [...new Set(filteredData.map(r => r.supplier))];
+            const supplierOrder = ['PCB', 'FPC', 'LDS天线', 'IPX8 Type-c（连接器）', 'Type-c（连接器）', 'BTB连接器'];
+            const suppliers = supplierOrder.filter(s => filteredData.some(r => r.supplier === s));
 
             suppliers.forEach(supplier => {
                 const sData = filteredData.filter(r => r.supplier === supplier);

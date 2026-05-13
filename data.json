@@ -246,6 +246,54 @@
       "totalBatch": 1198,
       "lar": "100.00%",
       "larTarget": "99.13%"
+    },
+    {
+      "supplier": "LDS天线",
+      "month": "1月",
+      "returnQty": 29,
+      "inputQty": 4482691,
+      "dppm": 6.00,
+      "dppmTarget": 45.9,
+      "receiveBatch": 305,
+      "totalBatch": 305,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
+    },
+    {
+      "supplier": "LDS天线",
+      "month": "2月",
+      "returnQty": 0,
+      "inputQty": 3439553,
+      "dppm": 0.00,
+      "dppmTarget": 45.9,
+      "receiveBatch": 236,
+      "totalBatch": 236,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
+    },
+    {
+      "supplier": "LDS天线",
+      "month": "3月",
+      "returnQty": 3,
+      "inputQty": 3489136,
+      "dppm": 1.00,
+      "dppmTarget": 45.9,
+      "receiveBatch": 237,
+      "totalBatch": 237,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
+    },
+    {
+      "supplier": "LDS天线",
+      "month": "4月",
+      "returnQty": 15,
+      "inputQty": 4257861,
+      "dppm": 3.50,
+      "dppmTarget": 45.9,
+      "receiveBatch": 372,
+      "totalBatch": 373,
+      "lar": "99.73%",
+      "larTarget": "99.13%"
     }
   ]
 }

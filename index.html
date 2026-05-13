@@ -130,7 +130,7 @@
                     <button class="btn btn-secondary" onclick="resetFilters()">重置筛选</button>
                 </div>
             </div>
-            <div class="stats-grid">
+            <div class="stats-grid" style="display:none">
                 <div class="stat-card" id="dppmCard">
                     <div class="stat-label">DPPM</div>
                     <div class="stat-value" id="dppmValue">--</div>
@@ -379,20 +379,44 @@
                 const dppmTargetVal = target.dppm;
                 const larTargetVal = parseFloat(target.lar.replace('%', ''));
 
+                const dppmColors = dppmValues.map(v => v > dppmTargetVal ? '#ff4444' : '#667eea');
+                const dppmBgColors = dppmValues.map(v => v > dppmTargetVal ? 'rgba(255,68,68,0.3)' : 'rgba(102,126,234,0.1)');
+                const dppmRadii = dppmValues.map(v => v > dppmTargetVal ? 8 : 4);
+                const dppmWarnLabels = dppmValues.map((v, i) => v > dppmTargetVal ? '⚠️' : '');
+
                 chartInstances[dppmId] = new Chart(document.getElementById(dppmId).getContext('2d'), {
                     type: 'line',
                     data: {
                         labels: months,
                         datasets: [{
                             label: 'DPPM', data: dppmValues, borderColor: '#667eea',
-                            backgroundColor: 'rgba(102,126,234,0.1)', borderWidth: 3, fill: true, tension: 0.4
+                            backgroundColor: 'rgba(102,126,234,0.1)', borderWidth: 3, fill: true, tension: 0.4,
+                            pointBackgroundColor: dppmColors, pointBorderColor: dppmColors,
+                            pointRadius: dppmRadii, pointHoverRadius: dppmRadii.map(r => r + 2)
                         }, {
                             label: 'DPPM目标(' + dppmTargetVal + ')', data: months.map(() => dppmTargetVal), borderColor: '#ff6b6b',
                             borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'DPPM' } } } }
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'top' },
+                            tooltip: {
+                                callbacks: {
+                                    afterLabel: function(ctx) {
+                                        if (ctx.datasetIndex === 0 && ctx.raw > dppmTargetVal) return '⚠️ 超标！目标: ' + dppmTargetVal;
+                                        return '';
+                                    }
+                                }
+                            }
+                        },
+                        scales: { y: { beginAtZero: true, title: { display: true, text: 'DPPM' } } }
+                    }
                 });
+
+                const larColors = larValues.map(v => v < larTargetVal ? '#ff4444' : '#4caf50');
+                const larRadii = larValues.map(v => v < larTargetVal ? 8 : 4);
 
                 chartInstances[larId] = new Chart(document.getElementById(larId).getContext('2d'), {
                     type: 'line',
@@ -400,13 +424,29 @@
                         labels: months,
                         datasets: [{
                             label: 'IQC LAR', data: larValues, borderColor: '#4caf50',
-                            backgroundColor: 'rgba(76,175,80,0.1)', borderWidth: 3, fill: true, tension: 0.4
+                            backgroundColor: 'rgba(76,175,80,0.1)', borderWidth: 3, fill: true, tension: 0.4,
+                            pointBackgroundColor: larColors, pointBorderColor: larColors,
+                            pointRadius: larRadii, pointHoverRadius: larRadii.map(r => r + 2)
                         }, {
                             label: 'LAR目标(' + target.lar + ')', data: months.map(() => larTargetVal), borderColor: '#ff6b6b',
                             borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { min: Math.min(95, larTargetVal - 5), max: 100.5, title: { display: true, text: 'IQC LAR (%)' } } } }
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'top' },
+                            tooltip: {
+                                callbacks: {
+                                    afterLabel: function(ctx) {
+                                        if (ctx.datasetIndex === 0 && ctx.raw < larTargetVal) return '⚠️ 未达标！目标: ' + target.lar;
+                                        return '';
+                                    }
+                                }
+                            }
+                        },
+                        scales: { y: { min: Math.min(95, larTargetVal - 5), max: 100.5, title: { display: true, text: 'IQC LAR (%)' } } }
+                    }
                 });
             });
         }

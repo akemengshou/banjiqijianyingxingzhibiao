@@ -198,6 +198,54 @@
       "totalBatch": 1035,
       "lar": "100.00%",
       "larTarget": "99.13%"
+    },
+    {
+      "supplier": "FPC",
+      "month": "1月",
+      "returnQty": 0,
+      "inputQty": 7327244,
+      "dppm": 0.00,
+      "dppmTarget": 45.9,
+      "receiveBatch": 494,
+      "totalBatch": 494,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
+    },
+    {
+      "supplier": "FPC",
+      "month": "2月",
+      "returnQty": 0,
+      "inputQty": 5056960,
+      "dppm": 0.00,
+      "dppmTarget": 45.9,
+      "receiveBatch": 460,
+      "totalBatch": 460,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
+    },
+    {
+      "supplier": "FPC",
+      "month": "3月",
+      "returnQty": 0,
+      "inputQty": 6672051,
+      "dppm": 0.00,
+      "dppmTarget": 45.9,
+      "receiveBatch": 671,
+      "totalBatch": 671,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
+    },
+    {
+      "supplier": "FPC",
+      "month": "4月",
+      "returnQty": 0,
+      "inputQty": 9648743,
+      "dppm": 0.00,
+      "dppmTarget": 45.9,
+      "receiveBatch": 1198,
+      "totalBatch": 1198,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
     }
   ]
 }

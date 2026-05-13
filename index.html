@@ -117,6 +117,7 @@
                         <select id="supplierFilter">
                             <option value="all">全部品名</option>
                             <option value="pcb">PCB</option>
+                            <option value="fpc">FPC</option>
                             <option value="ipx8">IPX8 Type-c（连接器）</option>
                             <option value="typec">Type-c（连接器）</option>
                             <option value="btb">BTB连接器</option>
@@ -259,7 +260,7 @@
             }
 
             if (supplierFilter !== 'all') {
-                const supplierMap = {'pcb':'PCB','ipx8':'IPX8 Type-c（连接器）','typec':'Type-c（连接器）','btb':'BTB连接器'};
+                const supplierMap = {'pcb':'PCB','fpc':'FPC','ipx8':'IPX8 Type-c（连接器）','typec':'Type-c（连接器）','btb':'BTB连接器'};
                 filteredData = filteredData.filter(row => row.supplier === supplierMap[supplierFilter]);
             }
 
@@ -335,7 +336,7 @@
             const monthFilter = document.getElementById('monthFilter').value;
             const supplierFilter = document.getElementById('supplierFilter').value;
             const allMonths = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-            const allSuppliers = ['PCB', 'IPX8 Type-c（连接器）', 'Type-c（连接器）', 'BTB连接器'];
+            const allSuppliers = ['PCB', 'FPC', 'IPX8 Type-c（连接器）', 'Type-c（连接器）', 'BTB连接器'];
             const monthMap = {'1':'1月','2':'2月','3':'3月','4':'4月','5':'5月','6':'6月','7':'7月','8':'8月','9':'9月','10':'10月','11':'11月','12':'12月'};
 
             let months = [], dppmByMonth = [], dppmTargetByMonth = [];

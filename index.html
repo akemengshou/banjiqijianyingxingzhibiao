@@ -354,9 +354,9 @@
 
                 const totalDppmVal = totalInputQty > 0 ? parseFloat((totalReturnQty / totalInputQty * 1000000).toFixed(2)) : 0;
                 const totalLarVal = totalBatch > 0 ? parseFloat((totalReceiveBatch / totalBatch * 100).toFixed(2)) : 100;
-                months.push('Total');
-                dppmValues.push(totalDppmVal);
-                larValues.push(totalLarVal);
+                months.unshift('Total');
+                dppmValues.unshift(totalDppmVal);
+                larValues.unshift(totalLarVal);
 
                 const row = document.createElement('div');
                 row.className = 'chart-container';

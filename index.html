@@ -358,9 +358,20 @@
                 dppmValues.unshift(totalDppmVal);
                 larValues.unshift(totalLarVal);
 
+                const dppmStatus = totalDppmVal <= dppmTargetVal ? '✅' : '⚠️超标';
+                const larStatus = totalLarVal >= larTargetVal ? '✅' : '⚠️未达标';
+                const latestMonth = months[months.length - 2] || months[months.length - 1];
+                const latestDppm = dppmValues.length > 1 ? dppmValues[dppmValues.length - 1] : totalDppmVal;
+                const latestLar = larValues.length > 1 ? larValues[larValues.length - 1] : totalLarVal;
+
+                const summaryDiv = document.createElement('div');
+                summaryDiv.style.cssText = 'background:#f0f4ff;border-radius:10px;padding:12px 20px;margin-bottom:15px;font-size:14px;color:#333;line-height:1.8;';
+                summaryDiv.innerHTML = `<b>${supplier}</b><br>DPPM：2026年累计DPPM <b>${totalDppmVal}</b>（目标${dppmTargetVal}）${dppmStatus}，${latestMonth} DPPM <b>${latestDppm}</b>。<br>LAR：2026年累计LAR <b>${totalLarVal}%</b>（目标${target.lar}）${larStatus}，${latestMonth} LAR <b>${latestLar}%</b>。`;
+                container.appendChild(summaryDiv);
+
                 const row = document.createElement('div');
                 row.className = 'chart-container';
-                row.style.marginBottom = '20px';
+                row.style.marginBottom = '30px';
                 row.innerHTML = `
                     <div class="chart-box">
                         <h4>${supplier}月度DPPM趋势</h4>

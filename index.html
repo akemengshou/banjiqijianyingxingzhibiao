@@ -362,17 +362,45 @@
                 dppmValues.unshift(totalDppmVal);
                 larValues.unshift(totalLarVal);
 
-                const dppmStatus = totalDppmVal <= dppmTargetVal ? '✅' : '⚠️超标';
-                const larStatus = totalLarVal >= larTargetVal ? '✅' : '⚠️未达标';
+                const dppmOk = totalDppmVal <= dppmTargetVal;
+                const larOk = totalLarVal >= larTargetVal;
                 const latestMonth = months[months.length - 1];
                 const latestDppm = dppmValues[dppmValues.length - 1];
                 const latestLar = larValues[larValues.length - 1];
-                const latestDppmWarn = latestDppm > dppmTargetVal ? ' <span style="color:#d32f2f;font-weight:bold">⚠️超标</span>' : '';
-                const latestLarWarn = latestLar < larTargetVal ? ' <span style="color:#d32f2f;font-weight:bold">⚠️未达标</span>' : '';
+                const latestDppmOk = latestDppm <= dppmTargetVal;
+                const latestLarOk = latestLar >= larTargetVal;
+
+                const badge = (ok) => ok
+                    ? '<span style="display:inline-block;background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:600;margin-left:6px">达标</span>'
+                    : '<span style="display:inline-block;background:#ffebee;color:#c62828;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:600;margin-left:6px">超标</span>';
+                const latestBadge = (ok) => ok
+                    ? ''
+                    : '<span style="display:inline-block;background:#ffebee;color:#c62828;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:600;margin-left:6px">⚠️</span>';
 
                 const summaryDiv = document.createElement('div');
-                summaryDiv.style.cssText = 'background:#f0f4ff;border-radius:10px;padding:12px 20px;margin-bottom:15px;font-size:14px;color:#333;line-height:1.8;';
-                summaryDiv.innerHTML = `<b>${supplier}</b><br>DPPM：2026年累计DPPM <b>${totalDppmVal}</b>（目标${dppmTargetVal}）${dppmStatus}，${latestMonth} DPPM <b>${latestDppm}</b>${latestDppmWarn}。<br>LAR：2026年累计LAR <b>${totalLarVal}%</b>（目标${target.lar}）${larStatus}，${latestMonth} LAR <b>${latestLar}%</b>${latestLarWarn}。`;
+                summaryDiv.style.cssText = 'background:linear-gradient(135deg,#f5f7fa 0%,#e8ecf1 100%);border-radius:12px;padding:16px 24px;margin-bottom:20px;border-left:4px solid #667eea;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
+                summaryDiv.innerHTML = `
+                    <div style="font-size:16px;font-weight:700;color:#333;margin-bottom:10px">${supplier}</div>
+                    <div style="display:flex;gap:30px;flex-wrap:wrap;font-size:14px;line-height:2">
+                        <div>
+                            <span style="color:#888">累计DPPM</span>
+                            <b style="color:#333;font-size:16px;margin:0 4px">${totalDppmVal}</b>
+                            <span style="color:#999;font-size:12px">目标${dppmTargetVal}</span>
+                            ${badge(dppmOk)}
+                            <span style="color:#888;margin-left:16px">${latestMonth}</span>
+                            <b style="color:${latestDppmOk ? '#333' : '#c62828'};font-size:16px;margin:0 4px">${latestDppm}</b>
+                            ${latestBadge(latestDppmOk)}
+                        </div>
+                        <div>
+                            <span style="color:#888">累计LAR</span>
+                            <b style="color:#333;font-size:16px;margin:0 4px">${totalLarVal}%</b>
+                            <span style="color:#999;font-size:12px">目标${target.lar}</span>
+                            ${badge(larOk)}
+                            <span style="color:#888;margin-left:16px">${latestMonth}</span>
+                            <b style="color:${latestLarOk ? '#333' : '#c62828'};font-size:16px;margin:0 4px">${latestLar}%</b>
+                            ${latestBadge(latestLarOk)}
+                        </div>
+                    </div>`;
                 container.appendChild(summaryDiv);
 
                 const row = document.createElement('div');

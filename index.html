@@ -333,6 +333,8 @@
                 const dppmValues = [];
                 const larValues = [];
 
+                let totalReturnQty = 0, totalInputQty = 0, totalDppm = 0, totalLar = 0, totalReceiveBatch = 0, totalBatch = 0, count = 0;
+
                 allMonths.forEach(month => {
                     if (monthFilter !== 'all' && month !== monthMap[monthFilter]) return;
                     const md = sData.filter(r => r.month === month);
@@ -340,10 +342,21 @@
                         months.push(month);
                         dppmValues.push(md[0].dppm);
                         larValues.push(parseFloat(md[0].lar.replace('%', '')));
+                        totalReturnQty += md[0].returnQty;
+                        totalInputQty += md[0].inputQty;
+                        totalReceiveBatch += md[0].receiveBatch;
+                        totalBatch += md[0].totalBatch;
+                        count++;
                     }
                 });
 
                 if (months.length === 0) return;
+
+                const totalDppmVal = totalInputQty > 0 ? parseFloat((totalReturnQty / totalInputQty * 1000000).toFixed(2)) : 0;
+                const totalLarVal = totalBatch > 0 ? parseFloat((totalReceiveBatch / totalBatch * 100).toFixed(2)) : 100;
+                months.push('Total');
+                dppmValues.push(totalDppmVal);
+                larValues.push(totalLarVal);
 
                 const row = document.createElement('div');
                 row.className = 'chart-container';

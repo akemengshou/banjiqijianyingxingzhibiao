@@ -153,26 +153,7 @@
             </div>
             <div class="chart-section">
                 <div class="chart-title">数据趋势图表</div>
-                <div class="chart-container">
-                    <div class="chart-box">
-                        <h4>月度DPPM趋势（含目标值）</h4>
-                        <canvas id="dppmChart"></canvas>
-                    </div>
-                    <div class="chart-box">
-                        <h4>供应商DPPM对比（含目标值）</h4>
-                        <canvas id="supplierChart"></canvas>
-                    </div>
-                </div>
-                <div class="chart-container" style="margin-top: 20px;">
-                    <div class="chart-box">
-                        <h4>月度IQC LAR趋势（含目标值）</h4>
-                        <canvas id="larChart"></canvas>
-                    </div>
-                    <div class="chart-box">
-                        <h4>供应商IQC LAR对比（含目标值）</h4>
-                        <canvas id="larSupplierChart"></canvas>
-                    </div>
-                </div>
+                <div id="chartsContainer"></div>
             </div>
         </div>
         <div class="footer">
@@ -330,136 +311,85 @@
             showInstantIndicator();
         }
 
-        let dppmChart = null, supplierChart = null, larChart = null, larSupplierChart = null;
+        let chartInstances = {};
 
         function updateCharts(filteredData) {
+            const container = document.getElementById('chartsContainer');
+            container.innerHTML = '';
+            Object.values(chartInstances).forEach(c => c.destroy());
+            chartInstances = {};
+
             const monthFilter = document.getElementById('monthFilter').value;
-            const supplierFilter = document.getElementById('supplierFilter').value;
             const allMonths = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-            const allSuppliers = ['PCB', 'FPC', 'IPX8 Type-c（连接器）', 'Type-c（连接器）', 'BTB连接器'];
             const monthMap = {'1':'1月','2':'2月','3':'3月','4':'4月','5':'5月','6':'6月','7':'7月','8':'8月','9':'9月','10':'10月','11':'11月','12':'12月'};
 
-            let months = [], dppmByMonth = [], dppmTargetByMonth = [];
-            if (monthFilter !== 'all') {
-                const selectedMonth = monthMap[monthFilter];
-                months = [selectedMonth];
-                dppmByMonth = [filteredData.length > 0 ? (filteredData.reduce((sum, row) => sum + row.dppm, 0) / filteredData.length).toFixed(2) : 0];
-                dppmTargetByMonth = [45.9];
-            } else {
+            const suppliers = [...new Set(filteredData.map(r => r.supplier))];
+
+            suppliers.forEach(supplier => {
+                const sData = filteredData.filter(r => r.supplier === supplier);
+                const months = [];
+                const dppmValues = [];
+                const larValues = [];
+
                 allMonths.forEach(month => {
-                    const monthData = filteredData.filter(row => row.month === month);
-                    if (monthData.length > 0 && monthData.some(row => row.inputQty > 0)) {
+                    if (monthFilter !== 'all' && month !== monthMap[monthFilter]) return;
+                    const md = sData.filter(r => r.month === month);
+                    if (md.length > 0 && md.some(r => r.inputQty > 0)) {
                         months.push(month);
-                        dppmByMonth.push((monthData.reduce((sum, row) => sum + row.dppm, 0) / monthData.length).toFixed(2));
-                        dppmTargetByMonth.push(45.9);
+                        dppmValues.push(md[0].dppm);
+                        larValues.push(parseFloat(md[0].lar.replace('%', '')));
                     }
                 });
-            }
 
-            if (dppmChart) dppmChart.destroy();
-            dppmChart = new Chart(document.getElementById('dppmChart').getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: months,
-                    datasets: [{
-                        label: 'DPPM', data: dppmByMonth, borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)', borderWidth: 3, fill: true, tension: 0.4
-                    }, {
-                        label: 'DPPM目标', data: dppmTargetByMonth, borderColor: '#ff6b6b',
-                        borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'DPPM' } } } }
-            });
+                if (months.length === 0) return;
 
-            let suppliers = allSuppliers;
-            let supplierDppm = allSuppliers.map(supplier => {
-                const sd = filteredData.filter(row => row.supplier === supplier);
-                return sd.length === 0 ? 0 : (sd.reduce((sum, row) => sum + row.dppm, 0) / sd.length).toFixed(2);
-            });
-            let supplierDppmTarget = allSuppliers.map(() => 45.9);
-            if (supplierFilter !== 'all') {
-                const sm = {'aac':'AAC','lixun':'立讯','ruixiang':'睿翔'};
-                suppliers = [sm[supplierFilter]];
-                supplierDppm = [filteredData.length > 0 ? (filteredData.reduce((sum, row) => sum + row.dppm, 0) / filteredData.length).toFixed(2) : 0];
-                supplierDppmTarget = [45.9];
-            }
+                const row = document.createElement('div');
+                row.className = 'chart-container';
+                row.style.marginBottom = '20px';
+                row.innerHTML = `
+                    <div class="chart-box">
+                        <h4>${supplier} - DPPM趋势</h4>
+                        <canvas id="dppm_${supplier}"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h4>${supplier} - IQC LAR趋势</h4>
+                        <canvas id="lar_${supplier}"></canvas>
+                    </div>
+                `;
+                container.appendChild(row);
 
-            if (supplierChart) supplierChart.destroy();
-            supplierChart = new Chart(document.getElementById('supplierChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: suppliers,
-                    datasets: [{
-                        label: 'DPPM', data: supplierDppm,
-                        backgroundColor: ['rgba(102,126,234,0.8)','rgba(118,75,162,0.8)','rgba(132,250,176,0.8)'],
-                        borderColor: ['#667eea','#764ba2','#84fab0'], borderWidth: 2
-                    }, {
-                        label: 'DPPM目标', data: supplierDppmTarget, type: 'line',
-                        borderColor: '#ff6b6b', borderWidth: 2, borderDash: [5, 5], fill: false
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'DPPM' } } } }
-            });
+                const dppmId = 'dppm_' + supplier;
+                const larId = 'lar_' + supplier;
 
-            let larByMonth = [], larTargetByMonth = [];
-            if (monthFilter !== 'all') {
-                const selectedMonth = monthMap[monthFilter];
-                larByMonth = [filteredData.length > 0 ? (filteredData.reduce((sum, row) => sum + parseFloat(row.lar.replace('%', '')), 0) / filteredData.length).toFixed(2) : 0];
-                larTargetByMonth = [99.13];
-            } else {
-                months.forEach(month => {
-                    const md = filteredData.filter(row => row.month === month);
-                    if (md.length > 0 && md.some(row => row.inputQty > 0)) {
-                        larByMonth.push((md.reduce((sum, row) => sum + parseFloat(row.lar.replace('%', '')), 0) / md.length).toFixed(2));
-                        larTargetByMonth.push(99.13);
-                    }
+                chartInstances[dppmId] = new Chart(document.getElementById(dppmId).getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'DPPM', data: dppmValues, borderColor: '#667eea',
+                            backgroundColor: 'rgba(102,126,234,0.1)', borderWidth: 3, fill: true, tension: 0.4
+                        }, {
+                            label: 'DPPM目标', data: months.map(() => 45.9), borderColor: '#ff6b6b',
+                            borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'DPPM' } } } }
                 });
-            }
 
-            if (larChart) larChart.destroy();
-            larChart = new Chart(document.getElementById('larChart').getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: months,
-                    datasets: [{
-                        label: 'IQC LAR', data: larByMonth, borderColor: '#4caf50',
-                        backgroundColor: 'rgba(76, 175, 80, 0.1)', borderWidth: 3, fill: true, tension: 0.4
-                    }, {
-                        label: 'LAR目标', data: larTargetByMonth, borderColor: '#ff6b6b',
-                        borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { min: 95, max: 100, title: { display: true, text: 'IQC LAR (%)' } } } }
-            });
-
-            let larBySupplier = allSuppliers.map(supplier => {
-                const sd = filteredData.filter(row => row.supplier === supplier);
-                return sd.length === 0 ? 0 : (sd.reduce((sum, row) => sum + parseFloat(row.lar.replace('%', '')), 0) / sd.length).toFixed(2);
-            });
-            let larSupplierTarget = allSuppliers.map(() => 99.13);
-            if (supplierFilter !== 'all') {
-                const sm = {'aac':'AAC','lixun':'立讯','ruixiang':'睿翔'};
-                suppliers = [sm[supplierFilter]];
-                larBySupplier = [filteredData.length > 0 ? (filteredData.reduce((sum, row) => sum + parseFloat(row.lar.replace('%', '')), 0) / filteredData.length).toFixed(2) : 0];
-                larSupplierTarget = [99.13];
-            }
-
-            if (larSupplierChart) larSupplierChart.destroy();
-            larSupplierChart = new Chart(document.getElementById('larSupplierChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: suppliers,
-                    datasets: [{
-                        label: 'IQC LAR', data: larBySupplier,
-                        backgroundColor: ['rgba(76,175,80,0.8)','rgba(139,195,74,0.8)','rgba(205,220,57,0.8)'],
-                        borderColor: ['#4caf50','#8bc34a','#cddc39'], borderWidth: 2
-                    }, {
-                        label: 'LAR目标', data: larSupplierTarget, type: 'line',
-                        borderColor: '#ff6b6b', borderWidth: 2, borderDash: [5, 5], fill: false
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { min: 95, max: 100, title: { display: true, text: 'IQC LAR (%)' } } } }
+                chartInstances[larId] = new Chart(document.getElementById(larId).getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'IQC LAR', data: larValues, borderColor: '#4caf50',
+                            backgroundColor: 'rgba(76,175,80,0.1)', borderWidth: 3, fill: true, tension: 0.4
+                        }, {
+                            label: 'LAR目标', data: months.map(() => 99.13), borderColor: '#ff6b6b',
+                            borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { min: 95, max: 100.5, title: { display: true, text: 'IQC LAR (%)' } } } }
+                });
             });
         }
 

@@ -364,9 +364,9 @@
 
                 const dppmStatus = totalDppmVal <= dppmTargetVal ? '✅' : '⚠️超标';
                 const larStatus = totalLarVal >= larTargetVal ? '✅' : '⚠️未达标';
-                const latestMonth = months[months.length - 2] || months[months.length - 1];
-                const latestDppm = dppmValues[dppmValues.length - 2];
-                const latestLar = larValues[larValues.length - 2];
+                const latestMonth = months[months.length - 1];
+                const latestDppm = dppmValues[dppmValues.length - 1];
+                const latestLar = larValues[larValues.length - 1];
                 const latestDppmWarn = latestDppm > dppmTargetVal ? ' <span style="color:#d32f2f;font-weight:bold">⚠️超标</span>' : '';
                 const latestLarWarn = latestLar < larTargetVal ? ' <span style="color:#d32f2f;font-weight:bold">⚠️未达标</span>' : '';
 

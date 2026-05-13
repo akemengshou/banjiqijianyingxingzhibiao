@@ -364,19 +364,15 @@
 
                 const dppmStatus = totalDppmVal <= dppmTargetVal ? '✅' : '⚠️超标';
                 const larStatus = totalLarVal >= larTargetVal ? '✅' : '⚠️未达标';
-
-                const dppmWarnMonths = [];
-                const larWarnMonths = [];
-                for (let i = 1; i < months.length; i++) {
-                    if (dppmValues[i] > dppmTargetVal) dppmWarnMonths.push(months[i] + ' DPPM ' + dppmValues[i]);
-                    if (larValues[i] < larTargetVal) larWarnMonths.push(months[i] + ' LAR ' + larValues[i] + '%');
-                }
-                const dppmWarnText = dppmWarnMonths.length > 0 ? '，<span style="color:#d32f2f;font-weight:bold">' + dppmWarnMonths.join('，') + ' ⚠️</span>' : '';
-                const larWarnText = larWarnMonths.length > 0 ? '，<span style="color:#d32f2f;font-weight:bold">' + larWarnMonths.join('，') + ' ⚠️</span>' : '';
+                const latestMonth = months[months.length - 2] || months[months.length - 1];
+                const latestDppm = dppmValues[dppmValues.length - 2];
+                const latestLar = larValues[larValues.length - 2];
+                const latestDppmWarn = latestDppm > dppmTargetVal ? ' <span style="color:#d32f2f;font-weight:bold">⚠️超标</span>' : '';
+                const latestLarWarn = latestLar < larTargetVal ? ' <span style="color:#d32f2f;font-weight:bold">⚠️未达标</span>' : '';
 
                 const summaryDiv = document.createElement('div');
                 summaryDiv.style.cssText = 'background:#f0f4ff;border-radius:10px;padding:12px 20px;margin-bottom:15px;font-size:14px;color:#333;line-height:1.8;';
-                summaryDiv.innerHTML = `<b>${supplier}</b><br>DPPM：2026年累计DPPM <b>${totalDppmVal}</b>（目标${dppmTargetVal}）${dppmStatus}${dppmWarnText}<br>LAR：2026年累计LAR <b>${totalLarVal}%</b>（目标${target.lar}）${larStatus}${larWarnText}`;
+                summaryDiv.innerHTML = `<b>${supplier}</b><br>DPPM：2026年累计DPPM <b>${totalDppmVal}</b>（目标${dppmTargetVal}）${dppmStatus}，${latestMonth} DPPM <b>${latestDppm}</b>${latestDppmWarn}。<br>LAR：2026年累计LAR <b>${totalLarVal}%</b>（目标${target.lar}）${larStatus}，${latestMonth} LAR <b>${latestLar}%</b>${latestLarWarn}。`;
                 container.appendChild(summaryDiv);
 
                 const row = document.createElement('div');

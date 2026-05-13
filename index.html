@@ -118,10 +118,10 @@
                             <option value="all">全部品名</option>
                             <option value="pcb">PCB</option>
                             <option value="fpc">FPC</option>
+                            <option value="tx">天线支架</option>
                             <option value="ipx8">IPX8 Type-c（连接器）</option>
                             <option value="typec">Type-c（连接器）</option>
                             <option value="btb">BTB连接器</option>
-                            <option value="lds">LDS天线</option>
                         </select>
                     </div>
                 </div>
@@ -242,7 +242,7 @@
             }
 
             if (supplierFilter !== 'all') {
-                const supplierMap = {'pcb':'PCB','fpc':'FPC','lds':'LDS天线','ipx8':'IPX8 Type-c（连接器）','typec':'Type-c（连接器）','btb':'BTB连接器'};
+                const supplierMap = {'pcb':'PCB','fpc':'FPC','tx':'天线支架','ipx8':'IPX8 Type-c（连接器）','typec':'Type-c（连接器）','btb':'BTB连接器'};
                 filteredData = filteredData.filter(row => row.supplier === supplierMap[supplierFilter]);
             }
 
@@ -324,7 +324,7 @@
             const allMonths = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
             const monthMap = {'1':'1月','2':'2月','3':'3月','4':'4月','5':'5月','6':'6月','7':'7月','8':'8月','9':'9月','10':'10月','11':'11月','12':'12月'};
 
-            const supplierOrder = ['PCB', 'FPC', 'LDS天线', 'IPX8 Type-c（连接器）', 'Type-c（连接器）', 'BTB连接器'];
+            const supplierOrder = ['PCB', 'FPC', '天线支架', 'IPX8 Type-c（连接器）', 'Type-c（连接器）', 'BTB连接器'];
             const suppliers = supplierOrder.filter(s => filteredData.some(r => r.supplier === s));
 
             suppliers.forEach(supplier => {
@@ -362,6 +362,9 @@
 
                 const dppmId = 'dppm_' + supplier;
                 const larId = 'lar_' + supplier;
+                const target = (metadata.targets && metadata.targets[supplier]) || { dppm: 45.9, lar: '99.13%' };
+                const dppmTargetVal = target.dppm;
+                const larTargetVal = parseFloat(target.lar.replace('%', ''));
 
                 chartInstances[dppmId] = new Chart(document.getElementById(dppmId).getContext('2d'), {
                     type: 'line',
@@ -371,7 +374,7 @@
                             label: 'DPPM', data: dppmValues, borderColor: '#667eea',
                             backgroundColor: 'rgba(102,126,234,0.1)', borderWidth: 3, fill: true, tension: 0.4
                         }, {
-                            label: 'DPPM目标', data: months.map(() => 45.9), borderColor: '#ff6b6b',
+                            label: 'DPPM目标(' + dppmTargetVal + ')', data: months.map(() => dppmTargetVal), borderColor: '#ff6b6b',
                             borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0
                         }]
                     },
@@ -386,11 +389,11 @@
                             label: 'IQC LAR', data: larValues, borderColor: '#4caf50',
                             backgroundColor: 'rgba(76,175,80,0.1)', borderWidth: 3, fill: true, tension: 0.4
                         }, {
-                            label: 'LAR目标', data: months.map(() => 99.13), borderColor: '#ff6b6b',
+                            label: 'LAR目标(' + target.lar + ')', data: months.map(() => larTargetVal), borderColor: '#ff6b6b',
                             borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { min: 95, max: 100.5, title: { display: true, text: 'IQC LAR (%)' } } } }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { min: Math.min(95, larTargetVal - 5), max: 100.5, title: { display: true, text: 'IQC LAR (%)' } } } }
                 });
             });
         }

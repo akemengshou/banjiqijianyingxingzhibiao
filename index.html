@@ -192,19 +192,30 @@
         }
 
         async function refreshData() {
-            const btn = event.target;
-            btn.disabled = true;
-            showSyncMessage('请在Claude Code中运行 /板级器件硬性指标刷新 同步飞书数据，完成后点击此按钮刷新');
-            let countdown = 30;
-            btn.textContent = `等待同步... ${countdown}s`;
-            const countdownInterval = setInterval(() => {
-                countdown--;
-                btn.textContent = `等待同步... ${countdown}s`;
-                if (countdown <= 0) {
-                    clearInterval(countdownInterval);
-                    location.reload();
-                }
-            }, 1000);
+            let msgDiv = document.getElementById('refreshModal');
+            if (msgDiv) msgDiv.remove();
+            msgDiv = document.createElement('div');
+            msgDiv.id = 'refreshModal';
+            msgDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            msgDiv.innerHTML = `
+                <div style="background:white;border-radius:16px;padding:30px 36px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;">
+                    <div style="font-size:20px;font-weight:700;color:#333;margin-bottom:16px">🔄 刷新数据</div>
+                    <div style="font-size:14px;color:#555;line-height:1.8;margin-bottom:20px">
+                        <div style="margin-bottom:12px"><b>1.</b> 在 Claude Code 中运行：</div>
+                        <div style="background:#f5f5f5;border-radius:8px;padding:10px 16px;font-family:monospace;font-size:15px;color:#667eea;margin-bottom:16px">/板级器件硬性指标刷新</div>
+                        <div style="margin-bottom:8px"><b>2.</b> 提供最新数据（任选一种）：</div>
+                        <div style="padding-left:20px;color:#666">
+                            📸 截图（数据表格）<br>
+                            📄 飞书电子表格链接<br>
+                            📋 直接粘贴数据
+                        </div>
+                    </div>
+                    <div style="text-align:right">
+                        <button onclick="this.closest('#refreshModal').remove()" style="padding:10px 24px;border:none;border-radius:8px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;font-size:14px;cursor:pointer">知道了</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(msgDiv);
+            msgDiv.addEventListener('click', function(e) { if (e.target === msgDiv) msgDiv.remove(); });
         }
 
         function showSyncMessage(message) {

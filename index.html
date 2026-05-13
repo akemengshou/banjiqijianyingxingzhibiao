@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>板级器件硬性指标数据看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 40px; text-align: center; }
+        .header h1 { font-size: 28px; margin-bottom: 10px; font-weight: 600; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .dashboard { padding: 30px 40px; }
+        .filter-section { background: #f8f9fa; border-radius: 15px; padding: 20px; margin-bottom: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .filter-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .filter-title::before { content: "🔍"; font-size: 18px; }
+        .filter-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group label { font-size: 12px; color: #666; font-weight: 500; }
+        .filter-group select { padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white; cursor: pointer; transition: all 0.3s ease; }
+        .filter-group select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2); }
+        .filter-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .btn-secondary { background: #e0e0e0; color: #333; }
+        .btn-secondary:hover { background: #d0d0d0; }
+        .auto-refresh-control { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+        .auto-refresh-label { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #666; cursor: pointer; }
+        .auto-refresh-countdown { font-size: 13px; color: #667eea; font-weight: 500; min-width: 40px; }
+        .instant-indicator { display: inline-block; margin-left: 10px; color: #4caf50; font-size: 12px; opacity: 0; transition: opacity 0.3s ease; }
+        .instant-indicator.show { opacity: 1; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 15px; padding: 20px; text-align: center; transition: transform 0.3s ease; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card.success { background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); }
+        .stat-card.warning { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+        .stat-card.danger { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+        .stat-card.danger .stat-value { color: #d32f2f; }
+        .stat-card.danger .stat-unit { color: #c62828; }
+        .warning-icon { display: inline-block; margin-left: 5px; }
+        .warning-icon.show { animation: pulse 1s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .stat-label { font-size: 12px; color: #666; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #333; }
+        .stat-unit { font-size: 12px; color: #999; }
+        .chart-section { background: #f8f9fa; border-radius: 15px; padding: 20px; margin-bottom: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .chart-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .chart-title::before { content: "📊"; font-size: 18px; }
+        .chart-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .chart-box { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .chart-box h4 { font-size: 14px; color: #666; margin-bottom: 10px; text-align: center; }
+        .chart-box canvas { max-height: 250px; width: 100% !important; height: 250px !important; }
+        .table-container { overflow-x: auto; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 12px; text-align: center; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 12px; text-align: center; border-bottom: 1px solid #eee; font-size: 14px; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        tr:hover { background-color: #e8f4f8; }
+        .highlight { background-color: #e8f5e9 !important; font-weight: bold; color: #2e7d32; }
+        .warning { background-color: #ffebee !important; font-weight: bold; color: #c62828; border: 2px solid #ef5350 !important; }
+        .warning-yellow { background-color: #fff8e1 !important; font-weight: bold; color: #f57f17; border: 2px solid #ffc107 !important; }
+        .warning-icon { color: #d32f2f !important; font-size: 16px; }
+        .warning-icon-yellow { color: #ff8f00 !important; font-size: 16px; }
+        .summary-row { background-color: #e3f2fd !important; font-weight: bold; }
+        .target-cell { color: #1976d2; }
+        .footer { background: #f8f9fa; padding: 20px 40px; text-align: center; color: #666; font-size: 13px; }
+        @media (max-width: 768px) { .container { border-radius: 0; } .header, .dashboard, .footer { padding: 20px; } .filter-controls { grid-template-columns: 1fr; } .chart-container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 板级器件硬性指标数据看板</h1>
+            <p>2026年板级器件IQC数据 | 实时监控</p>
+        </div>
+        <div class="dashboard">
+            <div class="filter-section">
+                <div class="filter-title">
+                    筛选条件
+                    <span class="instant-indicator" id="instantIndicator">✓ 已即时更新</span>
+                </div>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label>年度筛选</label>
+                        <select id="yearFilter">
+                            <option value="all">全部年度</option>
+                            <option value="2026" selected>2026年</option>
+                            <option value="2025">2025年</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>月度筛选</label>
+                        <select id="monthFilter">
+                            <option value="all">全部月份</option>
+                            <option value="1">1月</option>
+                            <option value="2">2月</option>
+                            <option value="3">3月</option>
+                            <option value="4">4月</option>
+                            <option value="5">5月</option>
+                            <option value="6">6月</option>
+                            <option value="7">7月</option>
+                            <option value="8">8月</option>
+                            <option value="9">9月</option>
+                            <option value="10">10月</option>
+                            <option value="11">11月</option>
+                            <option value="12">12月</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>供应商筛选</label>
+                        <select id="supplierFilter">
+                            <option value="all">全部供应商</option>
+                            <option value="aac">AAC</option>
+                            <option value="lixun">立讯</option>
+                            <option value="ruixiang">睿翔</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-buttons">
+                    <button class="btn btn-primary" onclick="refreshData()">刷新数据</button>
+                    <button class="btn btn-secondary" onclick="resetFilters()">重置筛选</button>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card" id="dppmCard">
+                    <div class="stat-label">DPPM</div>
+                    <div class="stat-value" id="dppmValue">--</div>
+                    <div class="stat-unit" id="dppmUnit">目标: 45.9</div>
+                </div>
+                <div class="stat-card" id="larCard">
+                    <div class="stat-label">IQC LAR</div>
+                    <div class="stat-value" id="larValue">--</div>
+                    <div class="stat-unit" id="larUnit">目标: 99.13%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">退料数量</div>
+                    <div class="stat-value" id="returnQtyValue">--</div>
+                    <div class="stat-unit">Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">投入数</div>
+                    <div class="stat-value" id="inputQtyValue">--</div>
+                    <div class="stat-unit">Total</div>
+                </div>
+            </div>
+            <div class="chart-section">
+                <div class="chart-title">数据趋势图表</div>
+                <div class="chart-container">
+                    <div class="chart-box">
+                        <h4>月度DPPM趋势（含目标值）</h4>
+                        <canvas id="dppmChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h4>供应商DPPM对比（含目标值）</h4>
+                        <canvas id="supplierChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container" style="margin-top: 20px;">
+                    <div class="chart-box">
+                        <h4>月度IQC LAR趋势（含目标值）</h4>
+                        <canvas id="larChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h4>供应商IQC LAR对比（含目标值）</h4>
+                        <canvas id="larSupplierChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <p>数据来源: 2026年板级器件IQC数据 | 更新时间: --</p>
+        </div>
+    </div>
+    <script>
+        let data = [];
+        let metadata = {};
+
+        async function fetchData() {
+            try {
+                const timestamp = new Date().getTime();
+                const response = await fetch('data.json?t=' + timestamp);
+                if (!response.ok) throw new Error('数据加载失败');
+                const jsonData = await response.json();
+                data = jsonData.data;
+                metadata = jsonData.metadata;
+
+                if (metadata.title) {
+                    document.querySelector('.header p').textContent = metadata.title + ' | 实时监控';
+                }
+                if (metadata.lastUpdated) {
+                    document.querySelector('.footer p').textContent = `数据来源: ${metadata.source || '飞书多维表格'} | 更新时间: ${metadata.lastUpdated}`;
+                }
+
+                updateStats(data);
+                updateCharts(data);
+                setupInstantFilters();
+                console.log('数据加载成功:', data.length, '条记录');
+            } catch (error) {
+                console.error('数据加载失败:', error);
+                document.querySelector('.header p').textContent = '数据加载失败，请刷新页面重试';
+            }
+        }
+
+        async function refreshData() {
+            const btn = event.target;
+            btn.disabled = true;
+            showSyncMessage('请在Claude Code中运行 /板级器件硬性指标刷新 同步飞书数据，完成后点击此按钮刷新');
+            let countdown = 30;
+            btn.textContent = `等待同步... ${countdown}s`;
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                btn.textContent = `等待同步... ${countdown}s`;
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    location.reload();
+                }
+            }, 1000);
+        }
+
+        function showSyncMessage(message) {
+            let msgDiv = document.getElementById('syncMessage');
+            if (!msgDiv) {
+                msgDiv = document.createElement('div');
+                msgDiv.id = 'syncMessage';
+                msgDiv.style.cssText = 'position:fixed;top:20px;right:20px;background:#667eea;color:white;padding:15px 25px;border-radius:10px;z-index:1000;box-shadow:0 5px 15px rgba(0,0,0,0.2);';
+                document.body.appendChild(msgDiv);
+            }
+            msgDiv.textContent = message;
+            msgDiv.style.display = 'block';
+        }
+
+        function hideSyncMessage() {
+            const msgDiv = document.getElementById('syncMessage');
+            if (msgDiv) msgDiv.style.display = 'none';
+        }
+
+        let debounceTimer;
+
+        function applyFilters() {
+            const yearFilter = document.getElementById('yearFilter').value;
+            const monthFilter = document.getElementById('monthFilter').value;
+            const supplierFilter = document.getElementById('supplierFilter').value;
+
+            let filteredData = data.filter(row => {
+                if (yearFilter !== 'all' && yearFilter !== '2026') return false;
+                return true;
+            });
+
+            if (monthFilter !== 'all') {
+                const monthMap = {'1':'1月','2':'2月','3':'3月','4':'4月','5':'5月','6':'6月','7':'7月','8':'8月','9':'9月','10':'10月','11':'11月','12':'12月'};
+                filteredData = filteredData.filter(row => row.month === monthMap[monthFilter]);
+            }
+
+            if (supplierFilter !== 'all') {
+                const supplierMap = {'aac':'AAC','lixun':'立讯','ruixiang':'睿翔'};
+                filteredData = filteredData.filter(row => row.supplier === supplierMap[supplierFilter]);
+            }
+
+            updateStats(filteredData);
+            updateCharts(filteredData);
+            showInstantIndicator();
+        }
+
+        function updateStats(filteredData) {
+            let totalReturnQty = 0, totalInputQty = 0, totalDppm = 0, totalLar = 0, count = 0;
+            filteredData.forEach(row => {
+                totalReturnQty += row.returnQty;
+                totalInputQty += row.inputQty;
+                totalDppm += row.dppm;
+                totalLar += parseFloat(row.lar.replace('%', ''));
+                count++;
+            });
+
+            const avgDppm = count > 0 ? (totalDppm / count).toFixed(2) : '0.00';
+            const avgLar = count > 0 ? (totalLar / count).toFixed(2) : '0.00';
+            const dppmTarget = 45.9;
+            const larTarget = 99.13;
+
+            const dppmCard = document.getElementById('dppmCard');
+            const dppmUnit = document.getElementById('dppmUnit');
+            dppmCard.className = 'stat-card';
+            if (parseFloat(avgDppm) > dppmTarget) {
+                dppmCard.classList.add('danger');
+                dppmUnit.innerHTML = `目标: ${dppmTarget} <span class="warning-icon">⚠️</span> 超标`;
+            } else {
+                dppmCard.classList.add('success');
+                dppmUnit.innerHTML = `目标: ${dppmTarget} ✅`;
+            }
+
+            const larCard = document.getElementById('larCard');
+            const larUnit = document.getElementById('larUnit');
+            larCard.className = 'stat-card';
+            if (parseFloat(avgLar) < larTarget) {
+                larCard.classList.add('danger');
+                larUnit.innerHTML = `目标: ${larTarget}% <span class="warning-icon">⚠️</span> 未达标`;
+            } else if (parseFloat(avgLar) < 100) {
+                larCard.classList.add('warning-yellow');
+                larUnit.innerHTML = `目标: ${larTarget}% <span class="warning-icon-yellow">⚠️</span> 非100%`;
+            } else {
+                larCard.classList.add('success');
+                larUnit.innerHTML = `目标: ${larTarget}% ✅`;
+            }
+
+            document.getElementById('dppmValue').textContent = avgDppm;
+            document.getElementById('larValue').textContent = avgLar + '%';
+            document.getElementById('returnQtyValue').textContent = totalReturnQty;
+            document.getElementById('inputQtyValue').textContent = (totalInputQty / 1000000).toFixed(1) + 'M';
+        }
+
+        function showInstantIndicator() {
+            const indicator = document.getElementById('instantIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => indicator.classList.remove('show'), 1500);
+        }
+
+        function resetFilters() {
+            document.getElementById('yearFilter').value = 'all';
+            document.getElementById('monthFilter').value = 'all';
+            document.getElementById('supplierFilter').value = 'all';
+            updateStats(data);
+            updateCharts(data);
+            showInstantIndicator();
+        }
+
+        let dppmChart = null, supplierChart = null, larChart = null, larSupplierChart = null;
+
+        function updateCharts(filteredData) {
+            const monthFilter = document.getElementById('monthFilter').value;
+            const supplierFilter = document.getElementById('supplierFilter').value;
+            const allMonths = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+            const allSuppliers = ['AAC', '立讯', '睿翔'];
+            const monthMap = {'1':'1月','2':'2月','3':'3月','4':'4月','5':'5月','6':'6月','7':'7月','8':'8月','9':'9月','10':'10月','11':'11月','12':'12月'};
+
+            let months = [], dppmByMonth = [], dppmTargetByMonth = [];
+            if (monthFilter !== 'all') {
+                const selectedMonth = monthMap[monthFilter];
+                months = [selectedMonth];
+                dppmByMonth = [filteredData.length > 0 ? (filteredData.reduce((sum, row) => sum + row.dppm, 0) / filteredData.length).toFixed(2) : 0];
+                dppmTargetByMonth = [45.9];
+            } else {
+                allMonths.forEach(month => {
+                    const monthData = filteredData.filter(row => row.month === month);
+                    if (monthData.length > 0 && monthData.some(row => row.inputQty > 0)) {
+                        months.push(month);
+                        dppmByMonth.push((monthData.reduce((sum, row) => sum + row.dppm, 0) / monthData.length).toFixed(2));
+                        dppmTargetByMonth.push(45.9);
+                    }
+                });
+            }
+
+            if (dppmChart) dppmChart.destroy();
+            dppmChart = new Chart(document.getElementById('dppmChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'DPPM', data: dppmByMonth, borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)', borderWidth: 3, fill: true, tension: 0.4
+                    }, {
+                        label: 'DPPM目标', data: dppmTargetByMonth, borderColor: '#ff6b6b',
+                        borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'DPPM' } } } }
+            });
+
+            let suppliers = allSuppliers;
+            let supplierDppm = allSuppliers.map(supplier => {
+                const sd = filteredData.filter(row => row.supplier === supplier);
+                return sd.length === 0 ? 0 : (sd.reduce((sum, row) => sum + row.dppm, 0) / sd.length).toFixed(2);
+            });
+            let supplierDppmTarget = allSuppliers.map(() => 45.9);
+            if (supplierFilter !== 'all') {
+                const sm = {'aac':'AAC','lixun':'立讯','ruixiang':'睿翔'};
+                suppliers = [sm[supplierFilter]];
+                supplierDppm = [filteredData.length > 0 ? (filteredData.reduce((sum, row) => sum + row.dppm, 0) / filteredData.length).toFixed(2) : 0];
+                supplierDppmTarget = [45.9];
+            }
+
+            if (supplierChart) supplierChart.destroy();
+            supplierChart = new Chart(document.getElementById('supplierChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: suppliers,
+                    datasets: [{
+                        label: 'DPPM', data: supplierDppm,
+                        backgroundColor: ['rgba(102,126,234,0.8)','rgba(118,75,162,0.8)','rgba(132,250,176,0.8)'],
+                        borderColor: ['#667eea','#764ba2','#84fab0'], borderWidth: 2
+                    }, {
+                        label: 'DPPM目标', data: supplierDppmTarget, type: 'line',
+                        borderColor: '#ff6b6b', borderWidth: 2, borderDash: [5, 5], fill: false
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'DPPM' } } } }
+            });
+
+            let larByMonth = [], larTargetByMonth = [];
+            if (monthFilter !== 'all') {
+                const selectedMonth = monthMap[monthFilter];
+                larByMonth = [filteredData.length > 0 ? (filteredData.reduce((sum, row) => sum + parseFloat(row.lar.replace('%', '')), 0) / filteredData.length).toFixed(2) : 0];
+                larTargetByMonth = [99.13];
+            } else {
+                months.forEach(month => {
+                    const md = filteredData.filter(row => row.month === month);
+                    if (md.length > 0 && md.some(row => row.inputQty > 0)) {
+                        larByMonth.push((md.reduce((sum, row) => sum + parseFloat(row.lar.replace('%', '')), 0) / md.length).toFixed(2));
+                        larTargetByMonth.push(99.13);
+                    }
+                });
+            }
+
+            if (larChart) larChart.destroy();
+            larChart = new Chart(document.getElementById('larChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'IQC LAR', data: larByMonth, borderColor: '#4caf50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)', borderWidth: 3, fill: true, tension: 0.4
+                    }, {
+                        label: 'LAR目标', data: larTargetByMonth, borderColor: '#ff6b6b',
+                        borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { min: 95, max: 100, title: { display: true, text: 'IQC LAR (%)' } } } }
+            });
+
+            let larBySupplier = allSuppliers.map(supplier => {
+                const sd = filteredData.filter(row => row.supplier === supplier);
+                return sd.length === 0 ? 0 : (sd.reduce((sum, row) => sum + parseFloat(row.lar.replace('%', '')), 0) / sd.length).toFixed(2);
+            });
+            let larSupplierTarget = allSuppliers.map(() => 99.13);
+            if (supplierFilter !== 'all') {
+                const sm = {'aac':'AAC','lixun':'立讯','ruixiang':'睿翔'};
+                suppliers = [sm[supplierFilter]];
+                larBySupplier = [filteredData.length > 0 ? (filteredData.reduce((sum, row) => sum + parseFloat(row.lar.replace('%', '')), 0) / filteredData.length).toFixed(2) : 0];
+                larSupplierTarget = [99.13];
+            }
+
+            if (larSupplierChart) larSupplierChart.destroy();
+            larSupplierChart = new Chart(document.getElementById('larSupplierChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: suppliers,
+                    datasets: [{
+                        label: 'IQC LAR', data: larBySupplier,
+                        backgroundColor: ['rgba(76,175,80,0.8)','rgba(139,195,74,0.8)','rgba(205,220,57,0.8)'],
+                        borderColor: ['#4caf50','#8bc34a','#cddc39'], borderWidth: 2
+                    }, {
+                        label: 'LAR目标', data: larSupplierTarget, type: 'line',
+                        borderColor: '#ff6b6b', borderWidth: 2, borderDash: [5, 5], fill: false
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { min: 95, max: 100, title: { display: true, text: 'IQC LAR (%)' } } } }
+            });
+        }
+
+        function setupInstantFilters() {
+            const debouncedFilter = () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(applyFilters, 50);
+            };
+            document.getElementById('yearFilter').addEventListener('change', debouncedFilter);
+            document.getElementById('monthFilter').addEventListener('change', debouncedFilter);
+            document.getElementById('supplierFilter').addEventListener('change', debouncedFilter);
+        }
+
+        let autoRefreshInterval = null;
+        let autoRefreshCountdown = 0;
+        const AUTO_REFRESH_MINUTES = 5;
+
+        function initAutoRefresh() {
+            const controlDiv = document.createElement('div');
+            controlDiv.className = 'auto-refresh-control';
+            controlDiv.innerHTML = `
+                <label class="auto-refresh-label">
+                    <input type="checkbox" id="autoRefreshToggle" onchange="toggleAutoRefresh()">
+                    自动刷新 (${AUTO_REFRESH_MINUTES}分钟)
+                </label>
+                <span id="autoRefreshCountdown" class="auto-refresh-countdown"></span>
+            `;
+            document.querySelector('.filter-buttons').appendChild(controlDiv);
+            document.getElementById('autoRefreshToggle').checked = true;
+            startAutoRefresh();
+        }
+
+        function toggleAutoRefresh() {
+            document.getElementById('autoRefreshToggle').checked ? startAutoRefresh() : stopAutoRefresh();
+        }
+
+        function startAutoRefresh() {
+            stopAutoRefresh();
+            autoRefreshCountdown = AUTO_REFRESH_MINUTES * 60;
+            updateCountdownDisplay();
+            autoRefreshInterval = setInterval(() => {
+                autoRefreshCountdown--;
+                updateCountdownDisplay();
+                if (autoRefreshCountdown <= 0) location.reload();
+            }, 1000);
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) { clearInterval(autoRefreshInterval); autoRefreshInterval = null; }
+            document.getElementById('autoRefreshCountdown').textContent = '';
+        }
+
+        function updateCountdownDisplay() {
+            const m = Math.floor(autoRefreshCountdown / 60);
+            const s = autoRefreshCountdown % 60;
+            document.getElementById('autoRefreshCountdown').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        window.onload = function() { fetchData(); initAutoRefresh(); };
+    </script>
+</body>
+</html>

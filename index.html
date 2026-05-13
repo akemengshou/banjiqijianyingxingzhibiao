@@ -352,6 +352,10 @@
 
                 if (months.length === 0) return;
 
+                const target = (metadata.targets && metadata.targets[supplier]) || { dppm: 45.9, lar: '99.13%' };
+                const dppmTargetVal = target.dppm;
+                const larTargetVal = parseFloat(target.lar.replace('%', ''));
+
                 const totalDppmVal = totalInputQty > 0 ? parseFloat((totalReturnQty / totalInputQty * 1000000).toFixed(2)) : 0;
                 const totalLarVal = totalBatch > 0 ? parseFloat((totalReceiveBatch / totalBatch * 100).toFixed(2)) : 100;
                 months.unshift('Total');
@@ -386,9 +390,6 @@
 
                 const dppmId = 'dppm_' + supplier;
                 const larId = 'lar_' + supplier;
-                const target = (metadata.targets && metadata.targets[supplier]) || { dppm: 45.9, lar: '99.13%' };
-                const dppmTargetVal = target.dppm;
-                const larTargetVal = parseFloat(target.lar.replace('%', ''));
 
                 const dppmColors = dppmValues.map(v => v > dppmTargetVal ? '#ff4444' : '#667eea');
                 const dppmBgColors = dppmValues.map(v => v > dppmTargetVal ? 'rgba(255,68,68,0.3)' : 'rgba(102,126,234,0.1)');

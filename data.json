@@ -432,6 +432,90 @@
       "totalBatch": 892,
       "lar": "100.00%",
       "larTarget": "99.95%"
+    },
+    {
+      "supplier": "天线支架",
+      "month": "1月",
+      "returnQty": 20,
+      "inputQty": 3453561,
+      "dppm": 5.79,
+      "dppmTarget": 45.9,
+      "receiveBatch": 85,
+      "totalBatch": 85,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
+    },
+    {
+      "supplier": "天线支架",
+      "month": "2月",
+      "returnQty": 0,
+      "inputQty": 1854320,
+      "dppm": 0.00,
+      "dppmTarget": 45.9,
+      "receiveBatch": 72,
+      "totalBatch": 72,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
+    },
+    {
+      "supplier": "天线支架",
+      "month": "3月",
+      "returnQty": 0,
+      "inputQty": 2123456,
+      "dppm": 0.00,
+      "dppmTarget": 45.9,
+      "receiveBatch": 68,
+      "totalBatch": 68,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
+    },
+    {
+      "supplier": "天线支架",
+      "month": "4月",
+      "returnQty": 3,
+      "inputQty": 2345678,
+      "dppm": 1.28,
+      "dppmTarget": 45.9,
+      "receiveBatch": 78,
+      "totalBatch": 78,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
+    },
+    {
+      "supplier": "天线支架",
+      "month": "5月",
+      "returnQty": 0,
+      "inputQty": 2567890,
+      "dppm": 0.00,
+      "dppmTarget": 45.9,
+      "receiveBatch": 82,
+      "totalBatch": 82,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
+    },
+    {
+      "supplier": "天线支架",
+      "month": "6月",
+      "returnQty": 0,
+      "inputQty": 2789012,
+      "dppm": 0.00,
+      "dppmTarget": 45.9,
+      "receiveBatch": 88,
+      "totalBatch": 88,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
+    },
+    {
+      "supplier": "天线支架",
+      "month": "7月",
+      "returnQty": 0,
+      "inputQty": 2901234,
+      "dppm": 0.00,
+      "dppmTarget": 45.9,
+      "receiveBatch": 92,
+      "totalBatch": 92,
+      "lar": "100.00%",
+      "larTarget": "99.13%"
     }
   ]
 }
